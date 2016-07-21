@@ -357,10 +357,30 @@ message LayerParameter {
   optional ThresholdParameter threshold_param = 128;
   optional WindowDataParameter window_data_param = 129;
   optional VideoDataParameter video_data_param = 140;
-  optional ROIPoolingParameter roi_pooling_param = 150;
   optional ScaleParameter scale_param = 160;
   optional BiasParameter bias_param = 161;
   optional BatchReductionParameter batch_reduction_param = 162;
+
+  optional ROIPoolingParameter roi_pooling_param = 8266711;
+  optional SmoothL1LossParameter smooth_l1_loss_param = 8266712;
+}
+
+message SmoothL1LossParameter {
+  // SmoothL1Loss(x) =
+  //   0.5 * (sigma * x) ** 2    -- if x < 1.0 / sigma / sigma
+  //   |x| - 0.5 / sigma / sigma -- otherwise
+  optional float sigma = 1 [default = 1];
+}
+
+// Message that stores parameters used by ROIPoolingLayer
+message ROIPoolingParameter {
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
+  optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
+  // Multiplicative spatial scale factor to translate ROI coords from their
+  // input scale to the scale used when pooling
+  optional float spatial_scale = 3 [default = 1];
 }
 
 // Message that stores parameters used to apply transformation
@@ -791,9 +811,15 @@ message PowerParameter {
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
-
-  //param_str to be sent to the python layer
-  optional string param_str = 3;
+  // This value is set to the attribute `param_str` of the `PythonLayer` object
+  // in Python before calling the `setup()` method. This could be a number,
+  // string, dictionary in Python dict format, JSON, etc. You may parse this
+  // string in `setup` method and use it in `forward` and `backward`.
+  optional string param_str = 3 [default = ''];
+  // Whether this PythonLayer is shared among worker solvers during data parallelism.
+  // If true, each worker solver sequentially run forward from this layer.
+  // This value should be set true if you are using it as a data layer.
+  optional bool share_in_parallel = 4 [default = false];
 }
 
 // Message that stores parameters used by ReductionLayer
@@ -1002,18 +1028,6 @@ message SPPParameter {
   }
   optional Engine engine = 6 [default = DEFAULT];
 }
-
-// Message that stores parameters used by ROIPoolingLayer
-message ROIPoolingParameter {
-  // Pad, kernel size, and stride are all given as a single value for equal
-  // dimensions in height and width or as Y, X pairs.
-  optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
-  optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
-  // Multiplicative spatial scale factor to translate ROI coords from their
-  // input scale to the scale used when pooling
-  optional float spatial_scale = 3 [default = 1];
-}
-
 
 // DEPRECATED: use LayerParameter.
 message V1LayerParameter {

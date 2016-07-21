@@ -30,8 +30,10 @@ class PythonLayer : public Layer<Dtype> {
     state = PyGILState_Ensure();
     self_.attr("param_str") = bp::str(
             this->layer_param_.python_param().param_str());
+    self_.attr("param_str_") = bp::str(
+        this->layer_param_.python_param().param_str());
     self_.attr("phase") = bp::str(
-        (this->phase_ == TRAIN)?"train":"test"
+        (this->phase_ == TRAIN)? "train" : "test"
     );
     self_.attr("_prefetch") = false;
     try {
